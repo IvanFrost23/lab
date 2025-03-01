@@ -1,27 +1,108 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Регистрация</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f8f8f8; }
-        .container { max-width: 400px; margin: 50px auto; background: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; }
-        form { display: flex; flex-direction: column; }
-        input { margin-bottom: 10px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 10px; background-color: #28a745; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #218838; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Регистрация</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f8f8f8; }
+    .container {
+      max-width: 400px; margin: 50px auto;
+      background: #fff; padding: 20px; border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; }
+    form p { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    span.feedback { font-size: 0.9em; color: red; }
+    button {
+      width: 100%; padding: 10px; background-color: #28a745;
+      border: none; border-radius: 4px; color: #fff; cursor: pointer;
+    }
+    button:hover { background-color: #218838; }
+  </style>
 </head>
 <body>
 <div class="container">
-    <h1>Регистрация</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Зарегистрироваться</button>
-    </form>
-    <p>Уже зарегистрированы? <a href="{% url 'login' %}">Войти</a></p>
+  <h1>Регистрация</h1>
+  <form id="registrationForm" method="post" novalidate>
+    {% csrf_token %}
+    <p>
+      <label for="id_username">Логин:</label>
+      <input type="text" name="username" id="id_username" required>
+      <span id="usernameFeedback" class="feedback"></span>
+    </p>
+    <p>
+      <label for="id_email">Электронная почта:</label>
+      <input type="email" name="email" id="id_email" required>
+      <span id="emailFeedback" class="feedback"></span>
+    </p>
+    <p>
+      <label for="id_password1">Пароль:</label>
+      <input type="password" name="password1" id="id_password1" required>
+      <span id="passwordFeedback" class="feedback"></span>
+    </p>
+    <p>
+      <label for="id_password2">Подтверждение пароля:</label>
+      <input type="password" name="password2" id="id_password2" required>
+    </p>
+    <button type="submit">Зарегистрироваться</button>
+  </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    const usernameInput = document.getElementById('id_username');
+    const usernameFeedback = document.getElementById('usernameFeedback');
+    const emailInput = document.getElementById('id_email');
+    const emailFeedback = document.getElementById('emailFeedback');
+    const passwordInput = document.getElementById('id_password1');
+    const passwordFeedback = document.getElementById('passwordFeedback');
+
+    emailInput.addEventListener('input', function(){
+        const email = emailInput.value;
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            emailFeedback.textContent = 'Введите корректный email.';
+        } else {
+            emailFeedback.textContent = '';
+        }
+    });
+
+    passwordInput.addEventListener('input', function(){
+        const password = passwordInput.value;
+        if (password.length < 6) {
+            passwordFeedback.textContent = 'Пароль должен быть не менее 6 символов.';
+        } else {
+            passwordFeedback.textContent = '';
+        }
+    });
+
+    usernameInput.addEventListener('blur', function(){
+        const username = usernameInput.value.trim();
+        if (username === '') return;
+
+        fetch(`/accounts/validate_username/?username=${encodeURIComponent(username)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.exists) {
+                    usernameFeedback.textContent = 'Этот логин уже занят.';
+                } else {
+                    usernameFeedback.textContent = '';
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка проверки логина:', error);
+            });
+    });
+
+    document.getElementById('registrationForm').addEventListener('submit', function(event){
+        if (usernameFeedback.textContent || emailFeedback.textContent || passwordFeedback.textContent) {
+            event.preventDefault();
+            alert('Пожалуйста, исправьте ошибки в форме перед отправкой.');
+        }
+    });
+});
+</script>
 </body>
 </html>

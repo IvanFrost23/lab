@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Book
 from .forms import BookForm
 
+from django.db.models import Q
+
 def index(request):
     per_page_param = request.GET.get('per_page', '5')
     try:
@@ -13,9 +15,15 @@ def index(request):
     except ValueError:
         per_page = 5
 
-    book_list = Book.objects.all().order_by('id')
-    paginator = Paginator(book_list, per_page)
+    filter_query = request.GET.get('q', '')
+    if filter_query:
+        book_list = Book.objects.filter(
+            Q(title__icontains=filter_query) | Q(author__icontains=filter_query)
+        ).order_by('id')
+    else:
+        book_list = Book.objects.all().order_by('id')
 
+    paginator = Paginator(book_list, per_page)
     page = request.GET.get('page', 1)
     try:
         books = paginator.page(page)
@@ -24,9 +32,8 @@ def index(request):
     except EmptyPage:
         books = paginator.page(paginator.num_pages)
 
-    return render(request, 'index.html', {'books': books, 'per_page': per_page})
+    return render(request, 'index.html', {'books': books, 'per_page': per_page, 'q': filter_query})
 
-# Доступно только авторизованным пользователям (как обычным, так и администраторам)
 @login_required(login_url='/accounts/login/')
 def add_book(request):
     if request.method == 'POST':
@@ -42,7 +49,6 @@ def add_book(request):
 def is_admin(user):
     return user.is_authenticated and user.role == 'admin'
 
-# Доступно только администраторам
 @user_passes_test(is_admin, login_url='/accounts/login/')
 def update_book(request, book_id):
     book = get_object_or_404(Book, pk=book_id)

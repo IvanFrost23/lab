@@ -4,72 +4,24 @@
   <meta charset="UTF-8">
   <title>Каталог книг</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f8f8f8;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 800px;
-      margin: 20px auto;
-      background: #fff;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    .nav {
-      text-align: right;
-      margin-bottom: 20px;
-    }
-    .nav a {
-      margin-left: 10px;
-      text-decoration: none;
-      color: #007BFF;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .button {
-      display: inline-block;
-      padding: 6px 12px;
-      margin: 5px 0;
-      background-color: #007BFF;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 3px;
-    }
-    .button:hover {
-      background-color: #0056b3;
-    }
-    .book {
-      border-bottom: 1px solid #ddd;
-      padding: 10px 0;
-    }
-    .book .actions a {
-      margin-right: 5px;
-      font-size: 0.9em;
-    }
-    .pagination {
-      text-align: center;
-      margin-top: 20px;
-    }
-    .pagination a, .pagination span {
-      margin: 0 5px;
-      padding: 6px 10px;
-      background-color: #e9ecef;
-      color: #333;
-      text-decoration: none;
-      border-radius: 3px;
-    }
-    .pagination a:hover {
-      background-color: #ced4da;
-    }
-    .current {
-      font-weight: bold;
-      background-color: #adb5bd;
-      color: #fff;
-    }
+    body { font-family: Arial, sans-serif; background-color: #f8f8f8; margin: 0; padding: 0; }
+    .container { max-width: 800px; margin: 20px auto; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .nav { text-align: right; margin-bottom: 20px; }
+    .nav a { margin-left: 10px; text-decoration: none; color: #007BFF; }
+    h1 { text-align: center; color: #333; }
+    .button { display: inline-block; padding: 6px 12px; margin: 5px 0; background-color: #007BFF; color: #fff; text-decoration: none; border-radius: 3px; }
+    .button:hover { background-color: #0056b3; }
+    .book { border-bottom: 1px solid #ddd; padding: 10px 0; }
+    .book .actions a { margin-right: 5px; font-size: 0.9em; }
+    .pagination { text-align: center; margin-top: 20px; }
+    .pagination a, .pagination span { margin: 0 5px; padding: 6px 10px; background-color: #e9ecef; color: #333; text-decoration: none; border-radius: 3px; }
+    .pagination a:hover { background-color: #ced4da; }
+    .current { font-weight: bold; background-color: #adb5bd; color: #fff; }
+    .filter-form { text-align: center; margin-bottom: 20px; }
+    .filter-form input[type="text"] { padding: 6px; width: 200px; margin-right: 10px; }
+    .filter-form select { padding: 6px; margin-right: 10px; }
+    .filter-form button { padding: 6px 12px; background-color: #28a745; color: #fff; border: none; border-radius: 3px; cursor: pointer; }
+    .filter-form button:hover { background-color: #218838; }
   </style>
 </head>
 <body>
@@ -87,30 +39,27 @@
 
     <h1>Каталог книг</h1>
 
-    <!-- Кнопка добавления книги видна только авторизованным пользователям -->
+    <form method="get" action="{% url 'home' %}" class="filter-form">
+      <input type="text" name="q" placeholder="Поиск по названию или автору" value="{{ q }}">
+      <label for="per_page">Элементов на странице:</label>
+      <select name="per_page" id="per_page">
+        <option value="5" {% if per_page|default:5|stringformat:"s" == "5" %}selected{% endif %}>5</option>
+        <option value="10" {% if per_page|stringformat:"s" == "10" %}selected{% endif %}>10</option>
+        <option value="20" {% if per_page|stringformat:"s" == "20" %}selected{% endif %}>20</option>
+      </select>
+      <button type="submit">Применить</button>
+    </form>
+
     {% if user.is_authenticated %}
       <p style="text-align: center;">
         <a class="button" href="{% url 'add_book' %}">Добавить новую книгу</a>
       </p>
     {% endif %}
 
-    <!-- Форма выбора количества элементов на странице (если требуется) -->
-    <form method="get" action="{% url 'home' %}" style="text-align: center; margin-bottom: 20px;">
-      <label for="per_page">Элементов на странице:</label>
-      <select name="per_page" id="per_page" onchange="this.form.submit()">
-        <option value="5"  {% if per_page == 5 %}selected{% endif %}>5</option>
-        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-        <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
-      </select>
-      <noscript><button type="submit">Применить</button></noscript>
-    </form>
-
-    <!-- Список книг -->
     <div class="book-list">
       {% for book in books %}
         <div class="book">
           <strong>{{ book.title }}</strong> — {{ book.author }} — ${{ book.price }}
-          <!-- Кнопки "Изменить" и "Удалить" отображаются только для администратора -->
           {% if user.is_authenticated and user.role == 'admin' %}
             <div class="actions">
               <a class="button" href="{% url 'update_book' book.id %}">Изменить</a>
@@ -123,16 +72,15 @@
       {% endfor %}
     </div>
 
-    <!-- Элементы навигации для пагинации -->
     <div class="pagination">
       {% if books.has_previous %}
-        <a href="?page=1&per_page={{ per_page }}">&laquo; первый</a>
-        <a href="?page={{ books.previous_page_number }}&per_page={{ per_page }}">предыдущий</a>
+        <a href="?page=1&per_page={{ per_page }}&q={{ q|urlencode }}">&laquo; первый</a>
+        <a href="?page={{ books.previous_page_number }}&per_page={{ per_page }}&q={{ q|urlencode }}">предыдущий</a>
       {% endif %}
       <span class="current">Страница {{ books.number }} из {{ books.paginator.num_pages }}</span>
       {% if books.has_next %}
-        <a href="?page={{ books.next_page_number }}&per_page={{ per_page }}">следующий</a>
-        <a href="?page={{ books.paginator.num_pages }}&per_page={{ per_page }}">последний &raquo;</a>
+        <a href="?page={{ books.next_page_number }}&per_page={{ per_page }}&q={{ q|urlencode }}">следующий</a>
+        <a href="?page={{ books.paginator.num_pages }}&per_page={{ per_page }}&q={{ q|urlencode }}">последний &raquo;</a>
       {% endif %}
     </div>
   </div>

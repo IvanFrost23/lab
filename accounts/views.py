@@ -1,13 +1,22 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from .forms import RegistrationForm
+from django.http import JsonResponse
+from .models import CustomUser
+
+def validate_username(request):
+    username = request.GET.get('username', None)
+    data = {
+        'exists': CustomUser.objects.filter(username=username).exists()
+    }
+    return JsonResponse(data)
+
 
 def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Автоматическая авторизация после успешной регистрации
             login(request, user)
             return redirect('home')
     else:
