@@ -15,6 +15,7 @@
     label { display: block; margin-bottom: 5px; font-weight: bold; }
     input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
     span.feedback { font-size: 0.9em; color: red; }
+    .error-list { color: red; margin-bottom: 10px; }
     button {
       width: 100%; padding: 10px; background-color: #28a745;
       border: none; border-radius: 4px; color: #fff; cursor: pointer;
@@ -25,6 +26,21 @@
 <body>
 <div class="container">
   <h1>Регистрация</h1>
+  <!-- Вывод ошибок формы, если они есть -->
+  {% if form.errors %}
+    <div class="error-list">
+      <ul>
+        {% for field in form %}
+          {% for error in field.errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
   <form id="registrationForm" method="post" novalidate>
     {% csrf_token %}
     <p>
@@ -59,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const passwordInput = document.getElementById('id_password1');
     const passwordFeedback = document.getElementById('passwordFeedback');
 
+    // Проверка корректности email
     emailInput.addEventListener('input', function(){
         const email = emailInput.value;
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -69,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     });
 
+    // Проверка минимальной длины пароля
     passwordInput.addEventListener('input', function(){
         const password = passwordInput.value;
         if (password.length < 6) {
@@ -78,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     });
 
+    // AJAX-проверка уникальности логина
     usernameInput.addEventListener('blur', function(){
         const username = usernameInput.value.trim();
         if (username === '') return;
@@ -94,13 +113,6 @@ document.addEventListener('DOMContentLoaded', function(){
             .catch(error => {
                 console.error('Ошибка проверки логина:', error);
             });
-    });
-
-    document.getElementById('registrationForm').addEventListener('submit', function(event){
-        if (usernameFeedback.textContent || emailFeedback.textContent || passwordFeedback.textContent) {
-            event.preventDefault();
-            alert('Пожалуйста, исправьте ошибки в форме перед отправкой.');
-        }
     });
 });
 </script>
