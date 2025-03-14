@@ -4,25 +4,96 @@
   <meta charset="UTF-8">
   <title>Личный кабинет</title>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f8f8f8; }
-    .container { max-width: 600px; margin: 50px auto; background: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    h1 { text-align: center; }
-    form p { margin-bottom: 15px; }
-    label { display: block; font-weight: bold; }
-    input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-    button { padding: 10px 15px; background-color: #007BFF; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-    button:hover { background-color: #0056b3; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f8f8;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    form p {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .error {
+      color: red;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .back-link a {
+      text-decoration: none;
+      color: #007BFF;
+    }
+    .back-link a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
 <div class="container">
   <h1>Личный кабинет</h1>
+
+  {% if error %}
+    <div class="error">{{ error }}</div>
+  {% endif %}
+
   <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+    <p>
+      <label for="id_username">Логин:</label>
+      <input type="text" name="username" id="id_username" value="{{ user.username }}" required>
+    </p>
+    <p>
+      <label for="id_new_password">Новый пароль:</label>
+      <input type="password" name="new_password" id="id_new_password" placeholder="Оставьте пустым, если не менять">
+    </p>
+    <p>
+      <label for="id_confirm_password">Подтверждение пароля:</label>
+      <input type="password" name="confirm_password" id="id_confirm_password" placeholder="Оставьте пустым, если не менять">
+    </p>
     <button type="submit">Сохранить изменения</button>
   </form>
-  <p><a href="{% url 'home' %}">Вернуться в каталог</a></p>
+
+  <div class="back-link">
+    <a href="{% url 'home' %}">Вернуться в каталог</a>
+  </div>
 </div>
 </body>
 </html>
