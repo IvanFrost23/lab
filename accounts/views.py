@@ -3,6 +3,20 @@ from django.contrib.auth import login, authenticate, logout
 from .forms import RegistrationForm
 from django.http import JsonResponse
 from .models import CustomUser
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserChangeForm
+
+@login_required
+def profile(request):
+    if request.method == 'POST':
+        form = UserChangeForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = UserChangeForm(instance=request.user)
+    return render(request, 'accounts/profile.html', {'form': form})
+
 
 def validate_username(request):
     username = request.GET.get('username', None)

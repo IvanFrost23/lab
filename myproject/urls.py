@@ -6,4 +6,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('', include('booksapp.urls')),
+    path('orders/', include('orders.urls')),
 ]
